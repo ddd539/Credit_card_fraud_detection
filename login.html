@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #74ebd5, #9face6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .login-container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0px 6px 20px rgba(0,0,0,0.2);
+            width: 350px;
+            text-align: center;
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-weight: bold;
+            float: left;
+            margin: 10px 0 5px 0;
+            color: #444;
+        }
+
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #4A90E2;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background: #357ABD;
+        }
+
+        p {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #555;
+        }
+
+        a {
+            color: #4A90E2;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h2>Page de Connexion</h2>
+        <form method="POST">
+            <label>Nom d'utilisateur :</label>
+            <input type="text" name="username" required>
+
+            <label>Mot de passe :</label>
+            <input type="password" name="password" required>
+
+            <button type="submit">Se connecter</button>
+        </form>
+
+        <p>Pas encore inscrit ? <a href="{{ url_for('register') }}">Créer un compte</a></p>
+    </div>
+</body>
+</html>
