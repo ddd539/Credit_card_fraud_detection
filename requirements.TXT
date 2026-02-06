@@ -1,8 +1,0 @@
-streamlit
-pandas
-sqlalchemy
-pymysql
-werkzeug
-plotly
-scikit-learn
-requests
