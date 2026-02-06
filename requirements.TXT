@@ -1,0 +1,9 @@
+streamlit
+numpy
+scikit-learn
+pandas
+sqlalchemy
+pymysql
+werkzeug
+plotly
+cryptography
