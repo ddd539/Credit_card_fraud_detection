@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>📊 Analyse des Transactions</title>
+
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #030a24, #0d0732);
+      color: #dccbcb;
+      margin: 0;
+      padding: 30px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .container {
+      width: 80%;
+      max-width: 900px;
+      background: rgb(2, 3, 36);
+      border-radius: 16px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+      padding: 40px;
+    }
+
+    h2 {
+      text-align: center;
+      color: #103658;
+    }
+
+    /* ===== FORM ELEMENTS ===== */
+    select, button {
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 8px;
+      font-size: 1rem;
+      width: 100%;
+    }
+
+    /* SELECT FIX */
+    select {
+      background-color: rgb(2, 3, 36);
+      color: #dccbcb;
+      border: 1px solid #103658;
+      appearance: none;
+    }
+
+    select option {
+      background-color: rgb(2, 3, 36);
+      color: #dccbcb;
+    }
+
+    /* Placeholder "-- Choisir --" */
+    select option[value=""] {
+      color: #9aa4b2;
+    }
+
+    /* BUTTON */
+    button {
+      background: #113a5d;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      border: none;
+      transition: background 0.3s, transform 0.2s;
+      margin-top: 20px;
+    }
+
+    button:hover {
+      background: #103658;
+      transform: translateY(-1px);
+    }
+
+    .form-row {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .form-group {
+      flex: 1;
+      min-width: 220px;
+    }
+
+    .graph-container {
+      margin-top: 30px;
+    }
+
+    a {
+      text-decoration: none;
+      color: white;
+      background: #888;
+      padding: 10px 15px;
+      border-radius: 8px;
+      display: inline-block;
+      margin-top: 20px;
+      transition: background 0.3s;
+    }
+
+    a:hover {
+      background: #555;
+    }
+  </style>
+
+  <!-- Plotly -->
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+  <script>
+    function updateColumns() {
+      const type = document.getElementById('analysis_type').value;
+      document.getElementById('col1-group').style.display = type ? 'block' : 'none';
+      document.getElementById('col2-group').style.display =
+        (type === 'bivarie' || type === 'trivarie') ? 'block' : 'none';
+      document.getElementById('col3-group').style.display =
+        (type === 'trivarie') ? 'block' : 'none';
+    }
+    window.onload = updateColumns;
+  </script>
+</head>
+
+<body>
+  <div class="container">
+    <h2>📈 Analyse des Transactions</h2>
+    <p>Bienvenue {{ username }} 👋</p>
+
+    <form method="POST">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="analysis_type">Type d'analyse :</label>
+          <select name="analysis_type" id="analysis_type" onchange="updateColumns()" required>
+            <option value="">-- Choisir --</option>
+            <option value="univarie" {% if graph_type=='univarie' %}selected{% endif %}>Univariée</option>
+            <option value="bivarie" {% if graph_type=='bivarie' %}selected{% endif %}>Bivariée</option>
+            <option value="trivarie" {% if graph_type=='trivarie' %}selected{% endif %}>Trivariée</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group" id="col1-group" style="display:none;">
+          <label for="col1">Colonne 1 :</label>
+          <select name="col1" id="col1" required>
+            {% for c in df_cols %}
+              <option value="{{ c }}">{{ c }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group" id="col2-group" style="display:none;">
+          <label for="col2">Colonne 2 :</label>
+          <select name="col2" id="col2">
+            <option value="">--</option>
+            {% for c in df_cols %}
+              <option value="{{ c }}">{{ c }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group" id="col3-group" style="display:none;">
+          <label for="col3">Colonne 3 :</label>
+          <select name="col3" id="col3">
+            <option value="">--</option>
+            {% for c in df_cols %}
+              <option value="{{ c }}">{{ c }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="graph_type">Type de graphe :</label>
+          <select name="graph_type" id="graph_type" required>
+            <option value="">-- Choisir --</option>
+            <option value="histogram">Histogramme</option>
+            <option value="scatter">Scatter Plot</option>
+            <option value="box">Box Plot</option>
+            <option value="bar">Bar Chart</option>
+            <option value="pie">Pie Chart</option>
+            <option value="line">Line Chart</option>
+            <option value="heatmap">Heatmap</option>
+            <option value="correlation">Corrélation</option>
+          </select>
+        </div>
+      </div>
+
+      <button type="submit">📊 Afficher le Graphe</button>
+    </form>
+
+    {% if graph_html %}
+      <div class="graph-container">
+        {{ graph_html | safe }}
+      </div>
+    {% endif %}
+
+    <div style="text-align:center;">
+      <a href="{{ url_for('home') }}">⬅ Retour à l'accueil</a>
+    </div>
+  </div>
+</body>
+</html>

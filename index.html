@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Détection de Fraude Bancaire</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #0A84FF;
+            --secondary: #5E5CE6;
+            --danger: #FF3B30;
+            --success: #34C759;
+            --warning: #FF9500;
+            --bg-dark: #050816;
+            --bg-card: rgba(15, 23, 42, 0.8);
+            --bg-input: rgba(30, 41, 59, 0.6);
+            --text-primary: #ffffff;
+            --text-secondary: #94a3b8;
+            --border: rgba(59, 130, 246, 0.2);
+            --glow: rgba(10, 132, 255, 0.4);
+        }
+
+        body {
+            font-family: 'Sora', -apple-system, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Animated background gradient */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(10, 132, 255, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(94, 92, 230, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(255, 59, 48, 0.08) 0%, transparent 50%);
+            animation: gradientShift 20s ease infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(5%, -5%) rotate(120deg); }
+            66% { transform: translate(-5%, 5%) rotate(240deg); }
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 50px;
+            animation: fadeInDown 0.6s ease;
+            gap: 20px;
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 700;
+            font-size: 1.3rem;
+            letter-spacing: -0.02em;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            box-shadow: 0 0 20px var(--glow);
+        }
+
+        /* User badge - separated */
+        .user-badge {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 10px 18px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .user-badge span {
+            color: var(--text-secondary);
+        }
+
+        .user-badge strong {
+            color: var(--text-primary);
+        }
+
+        /* Navigation menu - separated */
+        .nav-menu {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .nav-dropdown {
+            position: relative;
+        }
+
+        .nav-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 10px 18px;
+            border-radius: 12px;
+            color: var(--text-primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, rgba(10, 132, 255, 0.2), rgba(94, 92, 230, 0.2));
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--glow);
+        }
+
+        .nav-btn.logout {
+            color: var(--danger);
+        }
+
+        .nav-btn.logout:hover {
+            background: rgba(255, 59, 48, 0.1);
+            border-color: var(--danger);
+        }
+
+        /* Dropdown menu */
+        .dropdown-menu {
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            min-width: 220px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            z-index: 1000;
+            backdrop-filter: blur(20px);
+        }
+
+        .dropdown-menu.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-menu a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 18px;
+            color: var(--text-primary);
+            text-decoration: none;
+            transition: all 0.2s ease;
+            font-size: 0.9rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .dropdown-menu a:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown-menu a:hover {
+            background: linear-gradient(135deg, rgba(10, 132, 255, 0.15), rgba(94, 92, 230, 0.15));
+            padding-left: 24px;
+            color: var(--primary);
+        }
+
+        /* Main title */
+        .main-title {
+            text-align: center;
+            margin-bottom: 50px;
+            animation: fadeIn 0.8s ease 0.2s backwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .main-title h1 {
+            font-size: 2.8rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.03em;
+        }
+
+        .main-title p {
+            color: var(--text-secondary);
+            font-size: 1.05rem;
+            font-weight: 300;
+        }
+
+        /* Card */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 35px;
+            margin-bottom: 25px;
+            backdrop-filter: blur(10px);
+            animation: fadeIn 0.8s ease 0.4s backwards;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        /* Form elements */
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 14px 16px;
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-family: 'Space Mono', monospace;
+            font-size: 0.95rem;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--glow);
+            background: rgba(10, 20, 35, 0.95);
+        }
+
+        input::placeholder {
+            color: rgba(148, 163, 184, 0.5);
+        }
+
+        select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            background-color: rgba(15, 23, 42, 0.9);
+            padding-right: 40px;
+        }
+
+        select option {
+            background: rgba(15, 23, 42, 1);
+            color: var(--text-primary);
+            padding: 10px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 0;
+        }
+
+        /* Button */
+        .submit-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border: none;
+            border-radius: 14px;
+            color: white;
+            font-size: 1.05rem;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 20px var(--glow);
+            animation: fadeIn 0.8s ease 0.6s backwards;
+        }
+
+        .submit-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s ease, height 0.6s ease;
+        }
+
+        .submit-btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px var(--glow);
+        }
+
+        .submit-btn:active {
+            transform: translateY(-1px);
+        }
+
+        /* Results */
+        .result {
+            margin-top: 30px;
+            padding: 25px;
+            border-radius: 16px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 1.1rem;
+            animation: slideUp 0.5s ease;
+            border: 1px solid;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-fraud {
+            background: linear-gradient(135deg, rgba(255, 59, 48, 0.1), rgba(255, 59, 48, 0.05));
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+
+        .result-normal {
+            background: linear-gradient(135deg, rgba(52, 199, 89, 0.1), rgba(52, 199, 89, 0.05));
+            border-color: var(--success);
+            color: var(--success);
+        }
+
+        .result-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            animation: bounce 0.6s ease;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        /* Decorative elements */
+        .deco-circle {
+            position: fixed;
+            border-radius: 50%;
+            pointer-events: none;
+            opacity: 0.4;
+            filter: blur(60px);
+            z-index: 0;
+        }
+
+        .deco-circle-1 {
+            width: 400px;
+            height: 400px;
+            background: var(--primary);
+            top: -200px;
+            right: -200px;
+        }
+
+        .deco-circle-2 {
+            width: 300px;
+            height: 300px;
+            background: var(--secondary);
+            bottom: -150px;
+            left: -150px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .main-title h1 {
+                font-size: 2rem;
+            }
+
+            .card {
+                padding: 25px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 15px;
+            }
+
+            .header-left {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .nav-menu {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .nav-btn {
+                justify-content: center;
+            }
+
+            .dropdown-menu {
+                position: static;
+                transform: none;
+                margin-top: 8px;
+            }
+
+            .dropdown-menu.show {
+                transform: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    
+    <div class="deco-circle deco-circle-1"></div>
+    <div class="deco-circle deco-circle-2"></div>
+
+    <div class="container">
+        
+        <header class="header">
+            <div class="header-left">
+                <div class="user-badge">
+                    <span>👋 Bonjour,</span>
+                    <strong>{{ username or 'Utilisateur' }}</strong>
+                </div>
+            </div>
+            
+            <nav class="nav-menu">
+                <div class="nav-dropdown">
+                    <button class="nav-btn" onclick="toggleDropdown()">
+                        <span>📊</span>
+                        <span>Navigation</span>
+                        <span style="margin-left: 4px;">▾</span>
+                    </button>
+                    <div id="navDropdown" class="dropdown-menu">
+                        <a href="{{ url_for('dashboard') }}">
+                            <span>📊</span>
+                            <span>Dashboard</span>
+                        </a>
+                        <a href="{{ url_for('analysis') }}">
+                            <span>⭐</span>
+                            <span>Analyse Globale</span>
+                        </a>
+                        <a href="{{ url_for('user_analysis') }}">
+                            <span>📈</span>
+                            <span>Prédictions</span>
+                        </a>
+                    </div>
+                </div>
+                <a href="{{ url_for('logout') }}" class="nav-btn logout">
+                    <span>🚪</span>
+                    <span>Déconnexion</span>
+                </a>
+            </nav>
+        </header>
+
+        <div class="main-title">
+            <h1>Détection de Fraude</h1>
+            <p>Analysez les transactions en temps réel avec l'IA</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('predict') }}">
+            
+            <div class="card">
+                <h3>💳 Détails de la Transaction</h3>
+
+                <label>Catégorie</label>
+                <select name="category" required>
+                    <option value="" disabled selected>Sélectionner une catégorie</option>
+                    {% for c in ['gas_transport','grocery_pos','grocery_net','shopping_pos','shopping_net','food_dining','entertainment','travel','kids_pets','personal_care','health_fitness','home','misc_pos','misc_net'] %}
+                        <option value="{{ c }}">{{ c }}</option>
+                    {% endfor %}
+                </select>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Montant (€)</label>
+                        <input type="number" step="0.01" name="amt" placeholder="125.50" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Sexe</label>
+                        <select name="gender" required>
+                            <option value="M">Homme</option>
+                            <option value="F">Femme</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>📍 Localisation</h3>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Ville</label>
+                        <select name="city" required>
+                            {% for c in cities %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>État</label>
+                        <select name="state" required>
+                            {% for s in states %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <label>Population de la ville</label>
+                <input type="number" name="city_pop" placeholder="50000" required>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Latitude marchand</label>
+                        <input type="number" step="0.000001" name="merch_lat" placeholder="48.856614" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Longitude marchand</label>
+                        <input type="number" step="0.000001" name="merch_long" placeholder="2.352222" required>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>👤 Profil Client</h3>
+
+                <label>Profession</label>
+                <select name="job" required>
+                    {% for j in jobs %}<option value="{{ j }}">{{ j }}</option>{% endfor %}
+                </select>
+            </div>
+
+            <button type="submit" class="submit-btn">
+                <span style="position: relative; z-index: 1;">🔍 Analyser la Transaction</span>
+            </button>
+        </form>
+
+        {% if prediction %}
+            <div class="result {% if 'frauduleuse' in prediction %}result-fraud{% else %}result-normal{% endif %}">
+                <div class="result-icon">{% if 'frauduleuse' in prediction %}⚠️{% else %}✅{% endif %}</div>
+                {{ prediction }}
+            </div>
+        {% endif %}
+
+    </div>
+
+    <script>
+        // Toggle dropdown menu
+        function toggleDropdown() {
+            document.getElementById('navDropdown').classList.toggle('show');
+        }
+
+        // Close dropdown when clicking outside
+        window.onclick = function(event) {
+            if (!event.target.closest('.nav-dropdown')) {
+                const dropdown = document.getElementById('navDropdown');
+                if (dropdown && dropdown.classList.contains('show')) {
+                    dropdown.classList.remove('show');
+                }
+            }
+        }
+
+        // Add subtle parallax effect to background
+        document.addEventListener('mousemove', (e) => {
+            const circles = document.querySelectorAll('.deco-circle');
+            const x = e.clientX / window.innerWidth;
+            const y = e.clientY / window.innerHeight;
+            
+            circles.forEach((circle, index) => {
+                const speed = (index + 1) * 20;
+                circle.style.transform = `translate(${x * speed}px, ${y * speed}px)`;
+            });
+        });
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Analyse des Prédictions</title>
+
+    <!-- GOOGLE FONTS -->
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <!-- PLOTLY -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+    <style>
+        :root {
+            --primary: #0A84FF;
+            --secondary: #5E5CE6;
+            --danger: #FF3B30;
+            --success: #34C759;
+            --bg-dark: #050816;
+            --bg-card: rgba(15, 23, 42, 0.8);
+            --border: rgba(59, 130, 246, 0.2);
+            --text-primary: #ffffff;
+            --text-secondary: #94a3b8;
+            --glow: rgba(10, 132, 255, 0.4);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Sora', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: auto;
+            padding: 40px 20px;
+        }
+
+        /* HEADER */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+
+        .user-badge {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 12px 20px;
+            border-radius: 14px;
+            backdrop-filter: blur(10px);
+            font-size: 0.9rem;
+        }
+
+        .nav {
+            display: flex;
+            gap: 10px;
+        }
+
+        .nav a {
+            text-decoration: none;
+            color: var(--text-primary);
+            padding: 10px 18px;
+            border-radius: 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            transition: 0.3s;
+            font-size: 0.9rem;
+        }
+
+        .nav a:hover {
+            background: linear-gradient(
+                135deg,
+                rgba(10,132,255,0.2),
+                rgba(94,92,230,0.2)
+            );
+            box-shadow: 0 0 15px var(--glow);
+        }
+
+        /* TITLE (FIXED HERE ✅) */
+        .title {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .title h1 {
+            font-size: 2.6rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            background-clip: text;              /* standard */
+            -webkit-background-clip: text;      /* webkit */
+            color: transparent;                 /* REQUIRED */
+        }
+
+        .title p {
+            margin-top: 8px;
+            color: var(--text-secondary);
+        }
+
+        /* CARD */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+        }
+
+        .card h3 {
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+        }
+
+        /* FORM */
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+
+        select, button {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: rgba(15,23,42,0.9);
+            color: white;
+            font-family: 'Space Mono', monospace;
+            margin-bottom: 20px;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--glow);
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+        }
+
+        button {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px var(--glow);
+        }
+
+        .graph {
+            margin-top: 20px;
+        }
+    </style>
+
+    <script>
+        function updateColumns() {
+            const t = document.getElementById("user_analysis_type").value;
+            document.getElementById("c1").style.display = t ? "block" : "none";
+            document.getElementById("c2").style.display = (t === "bivarie" || t === "trivarie") ? "block" : "none";
+            document.getElementById("c3").style.display = (t === "trivarie") ? "block" : "none";
+        }
+    </script>
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- HEADER -->
+    <div class="header">
+        <div class="user-badge">👋 Bonjour, <strong>{{ username }}</strong></div>
+        <div class="nav">
+            <a href="{{ url_for('home') }}">🏠 Accueil</a>
+            <a href="{{ url_for('dashboard') }}">📊 Dashboard</a>
+            <a href="{{ url_for('logout') }}">🚪 Déconnexion</a>
+        </div>
+    </div>
+
+    <!-- TITLE -->
+    <div class="title">
+        <h1>Analyse des Prédictions</h1>
+        <p>Visualisation avancée de vos transactions</p>
+    </div>
+
+    <!-- DEFAULT GRAPHS -->
+    <div class="card">
+        <h3>📊 Répartition Normal / Fraude</h3>
+        {{ pie_html | safe }}
+    </div>
+
+    <div class="card">
+        <h3>💰 Distribution des Montants</h3>
+        {{ box_html | safe }}
+    </div>
+
+    <!-- CUSTOM ANALYSIS -->
+    <div class="card">
+        <h3>⚙ Analyse Personnalisée</h3>
+
+        <form method="POST">
+            <label>Type d'analyse</label>
+            <select name="user_analysis_type" id="user_analysis_type" onchange="updateColumns()" required>
+                <option value="">-- Choisir --</option>
+                <option value="univarie">Univariée</option>
+                <option value="bivarie">Bivariée</option>
+                <option value="trivarie">Trivariée</option>
+            </select>
+
+            <div class="row">
+                <div id="c1" style="display:none;">
+                    <label>Colonne 1</label>
+                    <select name="u_col1">
+                        {% for c in user_cols %}
+                        <option value="{{ c }}">{{ c }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div id="c2" style="display:none;">
+                    <label>Colonne 2</label>
+                    <select name="u_col2">
+                        {% for c in user_cols %}
+                        <option value="{{ c }}">{{ c }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div id="c3" style="display:none;">
+                    <label>Colonne 3</label>
+                    <select name="u_col3">
+                        {% for c in user_cols %}
+                        <option value="{{ c }}">{{ c }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <label>Type de Graphe</label>
+            <select name="u_graph_type" required>
+                <option value="">-- Choisir --</option>
+                <option value="histogram">Histogramme</option>
+                <option value="scatter">Scatter</option>
+                <option value="box">Box</option>
+                <option value="bar">Bar</option>
+                <option value="heatmap">Heatmap</option>
+            </select>
+
+            <button type="submit">📈 Générer</button>
+        </form>
+
+        {% if custom_html %}
+        <div class="graph">
+            {{ custom_html | safe }}
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+
+</body>
+</html>
